@@ -1,0 +1,4 @@
+#define MIDI_UART      UART_NUM_2
+#define MIDI_TX_PIN    17
+#define MIDI_RX_PIN    UART_PIN_NO_CHANGE
+#define MIDI_BAUDRATE  31250
