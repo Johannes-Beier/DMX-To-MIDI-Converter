@@ -1,4 +1,8 @@
-#define MIDI_UART      UART_NUM_2
-#define MIDI_TX_PIN    17
-#define MIDI_RX_PIN    UART_PIN_NO_CHANGE
-#define MIDI_BAUDRATE  31250
+
+#include <stdint.h>
+
+void midi_init(void);
+void dmx_init(void);
+void dmx_task(void *arg);
+
+void midi_send(uint8_t, uint8_t, uint8_t);
