@@ -20,7 +20,7 @@ static size_t s_rx_len;
 static bool s_synced;
 static int s_skip;
 
-static QueueHandle_t s_queue;
+extern QueueHandle_t receive_queue;
 
 
 static void append_rx_data(void)
@@ -67,7 +67,7 @@ void dmx_task(void *arg)
 
     while(1)
     {
-        if(xQueueReceive(s_queue, &ev, portMAX_DELAY) != pdTRUE)
+        if(xQueueReceive(receive_queue, &ev, portMAX_DELAY) != pdTRUE)
         {
             continue;
         }
@@ -78,7 +78,6 @@ void dmx_task(void *arg)
                 break;
             case UART_BREAK:
                 append_rx_data();
-                break;
                 commit_frame();
                 s_rx_len = 0;
                 s_skip = DMX_SKIP_BREAK_BYTES;
@@ -88,7 +87,7 @@ void dmx_task(void *arg)
             case UART_BUFFER_FULL:
                 ESP_LOGW("DMX", "Überlauf resynchronisiere");
                 uart_flush_input(UART_NUM_1);
-                xQueueReset(s_queue);
+                xQueueReset(receive_queue);
                 s_rx_len = 0;
                 break;
                 default:
@@ -105,7 +104,7 @@ bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count)
     }
     portENTER_CRITICAL(&s_lock);
     memcpy(dst, &s_channels[first_channel -1], count);
-    vPortExitCritical(&s_lock);
+    portEXIT_CRITICAL(&s_lock);
     return true;
 }
 
