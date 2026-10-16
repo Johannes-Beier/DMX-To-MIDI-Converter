@@ -3,7 +3,7 @@
 #include "freertos/idf_additions.h"
 #include "hal/uart_types.h"
 
-static QueueHandle_t uart_queue;
+static QueueHandle_t receive_queue;
 
 /**
 *   Initialisiert die UART-2-Schnittschtelle zur Ausgabe des MIDI-Signals
@@ -27,7 +27,7 @@ void midi_init(void)
         uart_driver_install
         (
             UART_NUM_2,                         /* UART-2 benutzen */
-            0,                                  /* Kein Empfangspuffer */
+            256,                                /* Kein Empfangspuffer nötig, muss aber gesetzt sein*/
             0,                                  /* Kein Sendepuffer */
             0,                                  /* Keine Event-Queue*/
             NULL,                               /* Entsprechend auch kein Handle für Queue*/
@@ -47,7 +47,7 @@ void midi_init(void)
         uart_set_pin
         (
             UART_NUM_2,                  /* UART-2 benutzen */
-            12,                         /* Auf Pin 12 senden*/
+            4,                         /* Auf Pin 4 senden*/
             UART_PIN_NO_CHANGE,         /* Auf keinem Pin empfangen */
             UART_PIN_NO_CHANGE,        /* Keine Pins für Sendemengensteuerung */
             UART_PIN_NO_CHANGE         /* Keine Pins für Sendemengensteuerung */
@@ -83,7 +83,7 @@ void dmx_init(void)
             1024,                                   /* 1024 Bytes Empfangspuffer */
             0,                                      /* Kein Sendepuffer */
             20,                                     /* max 20 Events in Queue */
-            &uart_queue,                            /* Handle für Event-Queue */
+            &receive_queue,                         /* Handle für Event-Queue */
         0                                           /* Keine Interruptzuweisung */
         )
     );
@@ -100,8 +100,8 @@ void dmx_init(void)
         uart_set_pin
         (
             UART_NUM_1,                     /* UART-2 benutzen */
+            UART_PIN_NO_CHANGE,             /* Auf keinem Pin senden */
             17,                            /* Auf Pin 17 empfangen */
-            UART_PIN_NO_CHANGE,            /* Auf keinem Pin senden */
             UART_PIN_NO_CHANGE,           /* Keine Pins für Sendemengensteuerung */
             UART_PIN_NO_CHANGE            /* Keine Pins für Sendemengensteuerung */
             )
