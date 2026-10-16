@@ -2,6 +2,9 @@
 #include "esp_timer.h"
 #include "freertos/idf_additions.h"
 #include "portmacro.h"
+#include <string.h>
+#include "esp_log.h"
+#include "freertos/queue.h"
 
 #ifndef DMX_SKIP_BREAK_BYTES
 #define DMX_SKIP_BREAK_BYTES 0
@@ -84,6 +87,8 @@ void dmx_task(void *arg)
                 s_synced = true;
                 break;
             case UART_FIFO_OVF:
+            s_synced = false;
+            break;
             case UART_BUFFER_FULL:
                 ESP_LOGW("DMX", "Überlauf resynchronisiere");
                 uart_flush_input(UART_NUM_1);
@@ -96,7 +101,7 @@ void dmx_task(void *arg)
     }
 }
 
-bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count)
+uint8_t dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count)
 {
     if(!dst || first_channel < 1 || count == 0 || (uint32_t)first_channel -1 + count > 512)
     {
@@ -108,7 +113,7 @@ bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count)
     return true;
 }
 
-bool dmx_receiver_is_active(uint32_t timeout_ms)
+uint8_t dmx_receiver_is_active(uint32_t timeout_ms)
 {
     portENTER_CRITICAL(&s_lock);
     int64_t last = s_last_frame_us;

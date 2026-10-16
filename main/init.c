@@ -2,8 +2,9 @@
 #include "esp_err.h"
 #include "freertos/idf_additions.h"
 #include "hal/uart_types.h"
+#include "esp_log.h"
 
-static QueueHandle_t receive_queue;
+ QueueHandle_t receive_queue;
 
 /**
 *   Initialisiert die UART-2-Schnittschtelle zur Ausgabe des MIDI-Signals

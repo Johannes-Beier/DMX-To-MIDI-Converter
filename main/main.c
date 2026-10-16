@@ -1,11 +1,11 @@
 
 #include <stdint.h>
 #include "driver/uart.h"
-#include "esp_err.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "hal/uart_types.h"
 #include "driver/gpio.h"
+#include "esp_log.h"
 
 
 #include "main.h"
@@ -16,7 +16,7 @@
 void app_main(void)
 {
     /* Aufruf der Initialisierungen */
-    uint8-t dmx_wert[512];
+    uint8_t dmx_wert[512];
     gpio_set_direction(GPIO_NUM_5, GPIO_MODE_OUTPUT);
     dmx_init();
     midi_init();
@@ -30,7 +30,7 @@ void app_main(void)
             {
                 gpio_set_level(GPIO_NUM_5, 1);
             } else{
-                gpio_set_level(GPIO_NUM_5, 0)
+                gpio_set_level(GPIO_NUM_5, 0);
             }
             vTaskDelay(pdMS_TO_TICKS(500));   //Warten
         }
