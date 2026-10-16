@@ -5,6 +5,7 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "hal/uart_types.h"
+#include "driver/gpio.h"
 
 
 #include "main.h"
@@ -15,24 +16,34 @@
 void app_main(void)
 {
     /* Aufruf der Initialisierungen */
+    uint8-t dmx_wert[512];
+    gpio_set_direction(GPIO_NUM_5, GPIO_MODE_OUTPUT);
     dmx_init();
     midi_init();
     xTaskCreate(dmx_task, "dmx_rx", 4096, NULL, configMAX_PRIORITIES -3, NULL);
     //Hauptprogramm
     while(1)
     {
-        midi_send(0x90, 60, 100);   //Senden
-        vTaskDelay(pdMS_TO_TICKS(500));   //Warten
-        midi_send(0x80, 60, 0);     //Senden
-        vTaskDelay(pdMS_TO_TICKS(500));   //Warten
+        if(dmx_receiver_is_active(500)) {
+            dmx_receiver_get(dmx_wert, 1, 512);
+            if(dmx_wert[1] > 125)
+            {
+                gpio_set_level(GPIO_NUM_5, 1);
+            } else{
+                gpio_set_level(GPIO_NUM_5, 0)
+            }
+            vTaskDelay(pdMS_TO_TICKS(500));   //Warten
+        }
     }
 }
 
 void midi_send(uint8_t status, uint8_t data1, uint8_t data2)
 {
     uint8_t msg[3] = {status, data1, data2};
-    ESP_ERROR_CHECK
-    (
-        uart_write_bytes(UART_NUM_2, (const char *) msg, sizeof(msg))
-    );
+    
+    int geschrieben= uart_write_bytes(UART_NUM_2, (const char *) msg, sizeof(msg));
+    if (geschrieben != (int)sizeof(msg))
+    {
+        ESP_LOGW("MIDI", "Senden fehlgeschlagen");
+    }
 }
