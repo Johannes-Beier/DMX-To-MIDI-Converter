@@ -1,3 +1,4 @@
+#include "main.h"
 #include "driver/uart.h"
 #include "esp_err.h"
 #include "freertos/idf_additions.h"
@@ -6,9 +7,7 @@
 
  QueueHandle_t receive_queue;
 
-/**
-*   Initialisiert die UART-2-Schnittschtelle zur Ausgabe des MIDI-Signals
-*/
+
 void midi_init(void)
 {
     /* Signalstruktur für 8N1-Aufbau anlegen */
@@ -27,7 +26,7 @@ void midi_init(void)
     (
         uart_driver_install
         (
-            UART_NUM_2,                         /* UART-2 benutzen */
+            MIDI_MODUL,                         /* UART-2 benutzen */
             256,                                /* Kein Empfangspuffer nötig, muss aber gesetzt sein*/
             0,                                  /* Kein Sendepuffer */
             0,                                  /* Keine Event-Queue*/
@@ -39,7 +38,7 @@ void midi_init(void)
     /* Signalstruktur auf UART-2 anwenden */
     ESP_ERROR_CHECK
     (
-        uart_param_config(UART_NUM_2, &uart_config)
+        uart_param_config(MIDI_MODUL, &uart_config)
     );
 
     /* Pins zu UART zuweisen */
@@ -47,21 +46,19 @@ void midi_init(void)
     (
         uart_set_pin
         (
-            UART_NUM_2,                  /* UART-2 benutzen */
-            4,                         /* Auf Pin 4 senden*/
+            MIDI_MODUL,                  /* UART-2 benutzen */
+            MIDI_PORT,                  /* Auf Pin 4 senden*/
             UART_PIN_NO_CHANGE,         /* Auf keinem Pin empfangen */
             UART_PIN_NO_CHANGE,        /* Keine Pins für Sendemengensteuerung */
             UART_PIN_NO_CHANGE         /* Keine Pins für Sendemengensteuerung */
         )
     );
     
-    ESP_LOGI("UART-2", "als MIDI-Sender initialisiert");
+    ESP_LOGI("MIDI", "MIDI_MODUL als MIDI-Sender initialisiert");
 }
 
 
-/**
-*   Initialisiert die UART-1-Schnittschtelle zur Einlese des DMX-Signals
-*/
+
 void dmx_init(void)
 {
     /* Signalstruktur für 8N2-Aufbau anlegen */
@@ -80,7 +77,7 @@ void dmx_init(void)
     (
         uart_driver_install
         (
-            UART_NUM_1,                             /* UART-1 benutzen */
+            DMX_MODUL,                             /* UART-1 benutzen */
             1024,                                   /* 1024 Bytes Empfangspuffer */
             0,                                      /* Kein Sendepuffer */
             20,                                     /* max 20 Events in Queue */
@@ -92,7 +89,7 @@ void dmx_init(void)
     /* Signalstruktur auf UART-1 anwenden */
     ESP_ERROR_CHECK
     (
-        uart_param_config(UART_NUM_1, &uart_config)
+        uart_param_config(DMX_MODUL, &uart_config)
     );
 
     /* Pins zu UART zuweisen */
@@ -100,16 +97,16 @@ void dmx_init(void)
     (
         uart_set_pin
         (
-            UART_NUM_1,                     /* UART-2 benutzen */
+            DMX_MODUL,                     /* UART-2 benutzen */
             UART_PIN_NO_CHANGE,             /* Auf keinem Pin senden */
-            17,                            /* Auf Pin 17 empfangen */
+            DMX_PORT,                       /* Auf Pin 17 empfangen */
             UART_PIN_NO_CHANGE,           /* Keine Pins für Sendemengensteuerung */
             UART_PIN_NO_CHANGE            /* Keine Pins für Sendemengensteuerung */
             )
     );
     ESP_ERROR_CHECK
     (
-        uart_set_rx_timeout(UART_NUM_1, 1)
+        uart_set_rx_timeout(DMX_MODUL, 1)
     );
-    ESP_LOGI("UART-1", "als DMX-Empfaenger initialisiert");
+    ESP_LOGI("DMX", "DMX_MODUL als DMX-Empfaenger initialisiert");
 }

@@ -3,10 +3,8 @@
 #include "driver/uart.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
-#include "hal/uart_types.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-
 
 #include "main.h"
 
@@ -16,7 +14,7 @@
 void app_main(void)
 {
     /* Aufruf der Initialisierungen */
-    uint8_t dmx_wert[512];
+    uint8_t dmx_wert[512] ={0u};
     gpio_set_direction(GPIO_NUM_5, GPIO_MODE_OUTPUT);
     dmx_init();
     midi_init();
@@ -32,8 +30,8 @@ void app_main(void)
             } else{
                 gpio_set_level(GPIO_NUM_5, 0);
             }
-            vTaskDelay(pdMS_TO_TICKS(500));   //Warten
         }
+        vTaskDelay(pdMS_TO_TICKS(10));   //Warten
     }
 }
 
@@ -41,7 +39,7 @@ void midi_send(uint8_t status, uint8_t data1, uint8_t data2)
 {
     uint8_t msg[3] = {status, data1, data2};
     
-    int geschrieben= uart_write_bytes(UART_NUM_2, (const char *) msg, sizeof(msg));
+    int geschrieben= uart_write_bytes(MIDI_MODUL, (const char *) msg, sizeof(msg));
     if (geschrieben != (int)sizeof(msg))
     {
         ESP_LOGW("MIDI", "Senden fehlgeschlagen");
