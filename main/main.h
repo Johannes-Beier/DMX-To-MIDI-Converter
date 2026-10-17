@@ -15,7 +15,7 @@
 
 #include "freertos/idf_additions.h"
 #include <stdbool.h>
- QueueHandle_t receive_queue;
+extern QueueHandle_t receive_queue;
 
 #include <stdint.h>
 

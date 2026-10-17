@@ -10,6 +10,7 @@
 #include "hal/uart_types.h"
 #include "esp_log.h"
 
+QueueHandle_t receive_queue;
 
 
 void midi_init(void)

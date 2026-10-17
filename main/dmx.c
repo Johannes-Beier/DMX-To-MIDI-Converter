@@ -38,36 +38,37 @@ static size_t s_skip;
 static void append_rx_data(void)
 {
     uint8_t tmp[128];
-    int32_t n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0U);
+    int32_t n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0);
     while(n > 0)
     {
-        if(!s_synced) 
+        if(s_synced) 
         {
-            continue;
-        }
-        for(size_t i = 0U; i < (size_t)n; i++)
-        {
-            if(s_skip > 0)
+            for(size_t i = 0u; i < (size_t)n; i++)
             {
-                s_skip--;
-                continue;
-            }
-            if(s_rx_len < sizeof(s_rx)) {
-                s_rx[s_rx_len] = tmp[i];
-                s_rx_len++;
+               if(s_skip > 0u)
+                {
+                   s_skip--;
+                }
+               else if(s_rx_len < sizeof(s_rx)) {
+                   s_rx[s_rx_len] = tmp[i];
+                   s_rx_len++;
+               }
+               else {
+                // Puffer voll, Rest verwerfen
+               }
             }
         }
-        n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0U);
+        n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0);
     }
 }
 
 static void commit_frame(void)
 {
-    if(!s_synced || s_rx_len < 2U || s_rx[0] != 0x00U)
+    if(!s_synced || s_rx_len < 2u || s_rx[0] != 0x00u)
     {
         return;
     }
-    size_t n = s_rx_len - 1;
+    size_t n = s_rx_len - 1u;
     portENTER_CRITICAL(&s_lock);
     memcpy(s_channels, &s_rx[1], n);
     s_frame_count++;
@@ -78,6 +79,7 @@ static void commit_frame(void)
 void dmx_task(void *arg)
 {
     uart_event_t ev;
+    (void)arg;
 
     while(1)
     {
@@ -93,27 +95,27 @@ void dmx_task(void *arg)
             case UART_BREAK:
                 append_rx_data();
                 commit_frame();
-                s_rx_len = 0;
+                s_rx_len = 0u;
                 s_skip = DMX_SKIP_BREAK_BYTES;
                 s_synced = true;
                 break;
             case UART_FIFO_OVF:
             case UART_BUFFER_FULL:
-                ESP_LOGW("DMX", "Überlauf resynchronisiere");
+                ESP_LOGW("DMX", "Ueberlauf resynchronisiere");
                 (void)uart_flush_input(DMX_MODUL);
-                xQueueReset(receive_queue);
-                s_rx_len = 0;
+                (void)xQueueReset(receive_queue);
+                s_rx_len = 0u;
                 s_synced = false;
                 break;
-                default:
-            break;
+            default:
+                break;
         }
     }
 }
 
 bool dmx_receiver_get(uint8_t *zielVar, uint16_t first_channel, uint16_t count)
 {
-    if((zielVar == NULL) || (first_channel < 1) || (count == 0) || (((uint32_t)first_channel -1U + count) > 512U))
+    if((zielVar == NULL) || (first_channel < 1u) || (count == 0u) || (((uint32_t)first_channel -1 + count) > 512u))
     {
         return false;
     }
@@ -129,6 +131,6 @@ bool dmx_receiver_is_active(uint32_t timeout_ms)
     int64_t last = s_last_frame_us;
     uint32_t count = s_frame_count;
     portEXIT_CRITICAL(&s_lock);
-    uint64_t now = esp_timer_get_time();
-    return (count > 0) && ((now - last) < ((int64_t)timeout_ms * 1000));
+    int64_t now = esp_timer_get_time();
+    return (count > 0u) && ((now - last) < ((int64_t)timeout_ms * 1000));
 }
