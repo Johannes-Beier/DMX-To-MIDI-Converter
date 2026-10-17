@@ -1,8 +1,16 @@
+/**
+* @file dmx.c
+* @brief Funktionen für den DMX-Empfang über UART
+*/
+
+
+
 #include "driver/uart.h"
 #include "esp_timer.h"
 #include "freertos/idf_additions.h"
 #include "main.h"
 #include "portmacro.h"
+#include <stddef.h>
 #include <string.h>
 #include "esp_log.h"
 #include "freertos/queue.h"
@@ -23,22 +31,21 @@ static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED;
 static uint8_t s_rx[512 + 1];
 static size_t s_rx_len;
 static bool s_synced;
-static int s_skip;
+static size_t s_skip;
 
-extern QueueHandle_t receive_queue;
 
 
 static void append_rx_data(void)
 {
     uint8_t tmp[128];
-    int n;
-    while((n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0)) > 0)
+    int32_t n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0U);
+    while(n > 0)
     {
         if(!s_synced) 
         {
             continue;
         }
-        for(int i = 0; i < n; i++)
+        for(size_t i = 0U; i < (size_t)n; i++)
         {
             if(s_skip > 0)
             {
@@ -46,15 +53,17 @@ static void append_rx_data(void)
                 continue;
             }
             if(s_rx_len < sizeof(s_rx)) {
-                s_rx[s_rx_len++] = tmp[i];
+                s_rx[s_rx_len] = tmp[i];
+                s_rx_len++;
             }
         }
+        n = uart_read_bytes(DMX_MODUL, tmp, sizeof(tmp), 0U);
     }
 }
 
 static void commit_frame(void)
 {
-    if(!s_synced || s_rx_len < 2 || s_rx[0] != 0x00)
+    if(!s_synced || s_rx_len < 2U || s_rx[0] != 0x00U)
     {
         return;
     }
@@ -91,7 +100,7 @@ void dmx_task(void *arg)
             case UART_FIFO_OVF:
             case UART_BUFFER_FULL:
                 ESP_LOGW("DMX", "Überlauf resynchronisiere");
-                uart_flush_input(DMX_MODUL);
+                (void)uart_flush_input(DMX_MODUL);
                 xQueueReset(receive_queue);
                 s_rx_len = 0;
                 s_synced = false;
@@ -102,14 +111,14 @@ void dmx_task(void *arg)
     }
 }
 
-bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count)
+bool dmx_receiver_get(uint8_t *zielVar, uint16_t first_channel, uint16_t count)
 {
-    if(!dst || first_channel < 1 || count == 0 || (uint32_t)first_channel -1 + count > 512)
+    if((zielVar == NULL) || (first_channel < 1) || (count == 0) || (((uint32_t)first_channel -1U + count) > 512U))
     {
         return false;
     }
     portENTER_CRITICAL(&s_lock);
-    memcpy(dst, &s_channels[first_channel -1], count);
+    memcpy(zielVar, &s_channels[first_channel -1], count);
     portEXIT_CRITICAL(&s_lock);
     return true;
 }
@@ -118,7 +127,8 @@ bool dmx_receiver_is_active(uint32_t timeout_ms)
 {
     portENTER_CRITICAL(&s_lock);
     int64_t last = s_last_frame_us;
-    uint32_t cnt = s_frame_count;
+    uint32_t count = s_frame_count;
     portEXIT_CRITICAL(&s_lock);
-    return cnt>0 && (esp_timer_get_time() - last) <(int64_t)timeout_ms * 1000;
+    uint64_t now = esp_timer_get_time();
+    return (count > 0) && ((now - last) < ((int64_t)timeout_ms * 1000));
 }

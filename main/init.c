@@ -1,11 +1,15 @@
+/**
+* @file init.c
+* @brief Initialisierung der UART-Schnittstellen
+*/
+
+
 #include "main.h"
 #include "driver/uart.h"
 #include "esp_err.h"
-#include "freertos/idf_additions.h"
 #include "hal/uart_types.h"
 #include "esp_log.h"
 
- QueueHandle_t receive_queue;
 
 
 void midi_init(void)
