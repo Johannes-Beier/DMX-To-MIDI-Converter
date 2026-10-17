@@ -22,19 +22,21 @@
 
 
 //Veröffentlichte Kanalwerte
-static uint8_t s_channels[512];
-static uint32_t s_frame_count;
-static int64_t s_last_frame_us;
-static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED;
+static uint8_t s_channels[512]; // Die Kanalwerte
+static uint32_t s_frame_count;  // Anzahl des Frames
+static int64_t s_last_frame_us; //Zeitpunkt des letzten Frames in µS
+static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED; //Lock um gleichzeitiges Lesen und Schreiben zu verhindern
 
 //Arbeitspuffer: Startcode +512 Kanäle
-static uint8_t s_rx[512 + 1];
-static size_t s_rx_len;
+static uint8_t s_rx[512 + 1];   //Empfangene Daten
+static size_t s_rx_len; //Länge der empfangenen Daten
 static bool s_synced;
 static size_t s_skip;
 
 
-
+/**
+* @brief Liest die DMX-Daten von der UART-Schnittstelle ein
+*/
 static void append_rx_data(void)
 {
     uint8_t tmp[128];
@@ -49,8 +51,8 @@ static void append_rx_data(void)
                 {
                    s_skip--;
                 }
-               else if(s_rx_len < sizeof(s_rx)) {
-                   s_rx[s_rx_len] = tmp[i];
+               else if(s_rx_len < sizeof(s_rx)) {   //Werte aus tmp in s_rx übertragen
+                   s_rx[s_rx_len] = tmp[i]; 
                    s_rx_len++;
                }
                else {
@@ -62,6 +64,10 @@ static void append_rx_data(void)
     }
 }
 
+
+/**
+* @brief Passt die zugehörigen Rahmen-Variablen bei einem empfangenen Frame an
+*/
 static void commit_frame(void)
 {
     if(!s_synced || s_rx_len < 2u || s_rx[0] != 0x00u)
@@ -75,6 +81,7 @@ static void commit_frame(void)
     s_last_frame_us = esp_timer_get_time();
     portEXIT_CRITICAL(&s_lock);
 }
+
 
 void dmx_task(void *arg)
 {
@@ -113,20 +120,21 @@ void dmx_task(void *arg)
     }
 }
 
-bool dmx_receiver_get(uint8_t *zielVar, uint16_t first_channel, uint16_t count)
+bool dmx_receiver_get(uint8_t *zielVar, uint16_t ersterKanal, uint16_t anzahlKanaele)
 {
-    if((zielVar == NULL) || (first_channel < 1u) || (count == 0u) || (((uint32_t)first_channel -1 + count) > 512u))
+    if((zielVar == NULL) || (ersterKanal < 1u) || (anzahlKanaele == 0u) || (((uint32_t)ersterKanal -1 + anzahlKanaele) > 512u))
     {
         return false;
     }
     portENTER_CRITICAL(&s_lock);
-    memcpy(zielVar, &s_channels[first_channel -1], count);
+    memcpy(zielVar, &s_channels[ersterKanal -1], anzahlKanaele);
     portEXIT_CRITICAL(&s_lock);
     return true;
 }
 
-bool dmx_receiver_is_active(uint32_t timeout_ms)
+bool dmx_receiver_aktiv(uint32_t timeout_ms)
 {
+    // Keine überschreibung während rauskopieren
     portENTER_CRITICAL(&s_lock);
     int64_t last = s_last_frame_us;
     uint32_t count = s_frame_count;

@@ -28,10 +28,10 @@ void app_main(void)
     {
         ESP_LOGE("DMX", "dmx_task konnte nicht erstellt werden");
     }
-    //Hauptprogramm
+    //Hauptschleife
     while(1)
     {
-        if(dmx_receiver_is_active(500)) {
+        if(dmx_receiver_aktiv(500)) {
             (void)dmx_receiver_get(dmx_wert, 1, 512);
             if(dmx_wert[1] > 125u)
             {

@@ -46,14 +46,14 @@ void dmx_task(void *arg);
 /**
 * @brief    Kopiert die Werte des letzten empfangenen Frames.
 *
-* @param[out]   dst             Zieladresse des Arrays, in das gespeichert werden soll. (Muss mindestens @p count Bytes groß sein). 
-* @param[in]    first_channel   Erster Kanal, der gespeichert werden soll.
-* @param[in]    count           Anzahl der zu speichernden Kanäle.
+* @param[out]   zielVar             Zieladresse des Arrays, in das gespeichert werden soll. (Muss mindestens @p anzahlKanaele Bytes groß sein). 
+* @param[in]    ersterKanal     Erster Kanal, der gespeichert werden soll.
+* @param[in]    anzahlKanaele           Anzahl der zu speichernden Kanäle.
 * 
 * @retval true  Werte wurden erfolgreich kopiert.
-* @retval false Mindestens ein ungütliger Parameter, @p dst wurde nicht verändert.
+* @retval false Mindestens ein ungütliger Parameter, @p zielVar wurde nicht verändert.
 */
-bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count);
+bool dmx_receiver_get(uint8_t *zielVar, uint16_t ersterKanal, uint16_t anzahlKanaele);
 
 
 /**
@@ -64,7 +64,7 @@ bool dmx_receiver_get(uint8_t *dst, uint16_t first_channel, uint16_t count);
 * @retval true  Letzter Frame ist jünger als @p timeout_ms .
 * @retval false Kein Frame im Zeitbereich empfangen.
 */
-bool dmx_receiver_is_active(uint32_t timeout_ms);
+bool dmx_receiver_aktiv(uint32_t timeout_ms);
 
 
 /**
